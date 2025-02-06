@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f4f4f4;
+      }
+
+
+      em {
+        color: white;
+      }
+      #messages {
+        list-style: none;
+        width: 300px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 10px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      #messages li {
+        padding: 8px 12px;
+        margin: 5px 0;
+        background: #007bff;
+        color: white;
+        border-radius: 5px;
+        word-wrap: break-word;
+      }
+
+      form {
+        display: flex;
+        margin-top: 10px;
+        width: 300px;
+      }
+
+      input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px 0 0 5px;
+        outline: none;
+      }
+
+      button {
+        padding: 10px 15px;
+        border: none;
+        background: #007bff;
+        color: white;
+        cursor: pointer;
+        border-radius: 0 5px 5px 0;
+        transition: 0.3s;
+      }
+
+      button:hover {
+        background: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <ul id="messages">
+      <li><strong>Sistema:</strong> Bem-vindo ao chat!</li>
+    </ul>
+    <form action="" id="form">
+      <input type="text" id="input" autocomplete="off" placeholder="Digite sua mensagem..." />
+      <button>Send</button>
+    </form>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+      const messageList = document.getElementById("messages");
+      const input = document.getElementById("input");
+      let username = "";
+
+      // Pergunta o nome do usuário ao entrar no chat
+      while (!username ) {
+        username = prompt("Digite seu nome:");
+      }
+      socket.emit("set_username", username);
+
+      // Evento para enviar mensagem
+      document.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (input.value) {
+          socket.emit("message", input.value);
+          input.value = "";
+        }
+      });
+
+      // Recebe mensagens do servidor e exibe no chat
+      socket.on("message", (data) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${data.username}:</strong> ${data.msg}`;
+        messageList.appendChild(li);
+        messageList.scrollTop = messageList.scrollHeight;
+      });
+
+      // Notifica quando um usuário entra
+      socket.on("user_joined", (username) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<em>${username} entrou no chat.</em>`;
+        li.style.color = "green";
+        messageList.appendChild(li);
+      });
+
+      // Notifica quando um usuário sai
+      socket.on("user_left", (username) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<em>${username} saiu do chat.</em>`;
+        li.style.color = "red";
+        messageList.appendChild(li);
+      });
+    </script>
+  </body>
+</html>
